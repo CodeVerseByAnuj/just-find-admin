@@ -9,8 +9,24 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const validate = async () => {
+      // First, try a client-side cookie check. If a readable token cookie exists,
+      // assume the user is logged in and allow access immediately. If not, fall
+      // back to server validation which can check HttpOnly cookies or session state.
       try {
-        const res = await fetch(`/api/auth/validate?pathname=${encodeURIComponent(pathname)}`);
+        const cookie = typeof document !== 'undefined' ? document.cookie : '';
+        const tokenCookieNames = ['token', 'jwt', 'access_token', 'auth_token'];
+        const hasToken = tokenCookieNames.some((name) =>
+          cookie.split(';').some((c) => c.trim().startsWith(`${name}=`))
+        );
+
+        if (hasToken) {
+          setIsLoading(false);
+          return;
+        }
+
+        // fallback: server-side validation (handles HttpOnly cookies or missing client cookie)
+        const res = await fetch(`/api/auth/validate?pathname=${encodeURIComponent(pathname)}&t=${Date.now()}`);
+
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           const redirect = data?.redirect || (res.status === 401 ? '/auth/auth1/login' : '/unauthorized');

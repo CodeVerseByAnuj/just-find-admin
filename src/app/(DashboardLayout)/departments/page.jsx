@@ -1,4 +1,4 @@
-import DepartmentList from '@/app/components/our-pages/department-portal/DepartmentList'
+import DepartmentList from '@/app/components/just-find-page/department-portal/DepartmentList'
 
 function page() {
   return (
