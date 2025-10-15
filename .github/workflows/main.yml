@@ -1,0 +1,32 @@
+name: Main CI/CD
+
+on:
+  push:
+    branches: ['main', 'qa']
+  pull_request:
+    branches: ['main', 'qa']
+
+jobs:
+  build-dev:
+    runs-on: [self-hosted, grade-smith-cms]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: |
+          touch .env
+          echo "${{ secrets.DEV_ENV_FILE }}" > .env
+      - run: npm run build
+      - run: pm2 restart grade-smith-cms:2202
+      
+  build-qa:
+    runs-on: [self-hosted, grade-smith-cms-qa]
+    if: github.ref == 'refs/heads/qa'
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: |
+          touch .env
+          echo "${{ secrets.QA_ENV_FILE }}" > .env
+      - run: npm run build
+      - run: pm2 restart grade-smith-cms-qa:2203

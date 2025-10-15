@@ -1,0 +1,32 @@
+.circle-top {
+    position: absolute;
+    top: -33%;
+    left: -14%;
+    border: 120px solid #1f1f1f;
+    height: 800px;
+    width: 800px;
+    display: block;
+    background: 0 0;
+    border-radius: 100%;
+    z-index: 1;
+}
+
+.circle-bottom {
+    position: absolute;
+    bottom: 0%;
+    right: 5%;
+    height: 300px;
+    width: 300px;
+    display: block;
+    background: 0 0;
+    z-index: 1;
+    opacity: .7;
+}
+
+.boxed-auth [data-testid="carousel-left-control"],
+.boxed-auth [data-testid="carousel-right-control"] {
+    display: none;
+}
+.boxed-auth [data-testid="carousel"]{
+    height:250px;
+}
