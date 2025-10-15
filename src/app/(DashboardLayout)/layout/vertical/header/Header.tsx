@@ -22,6 +22,7 @@ interface HeaderPropsType {
 const Header = ({ layoutType }: HeaderPropsType) => {
   const [isSticky, setIsSticky] = useState(false);
   const [greeting, setGreeting] = useState("");
+  const [userDetails, setUserDetails] = useState<any>(null);
 
   useEffect(() => {
     const hours = new Date().getHours();
@@ -34,9 +35,20 @@ const Header = ({ layoutType }: HeaderPropsType) => {
     } else {
       msg = "Good Evening";
     }
-    const userDetailsRaw = localStorage.getItem("user_details");
-    const userDetails = userDetailsRaw ? JSON.parse(userDetailsRaw) : null;
-    const name = userDetails ? userDetails.first_name : "User";
+    // read user details from localStorage only on the client
+    let name = "User";
+    if (typeof window !== "undefined") {
+      try {
+        const userDetailsRaw = localStorage.getItem("user_details");
+        const ud = userDetailsRaw ? JSON.parse(userDetailsRaw) : null;
+        if (ud) {
+          setUserDetails(ud);
+          name = ud.name || name;
+        }
+      } catch (e) {
+        // ignore JSON parse errors
+      }
+    }
     setGreeting(`${msg}, ${name}`);
   }, []);
 
@@ -57,8 +69,7 @@ const Header = ({ layoutType }: HeaderPropsType) => {
     };
   }, []);
 
-  const userDetailsRaw = localStorage.getItem("user_details");
-  const userDetails = userDetailsRaw ? JSON.parse(userDetailsRaw) : null;
+  // userDetails is populated in useEffect from localStorage (client-side only)
 
   const { setIsCollapse, isCollapse, isLayout, activeMode, activeDir, setActiveMode, isMobileSidebar, setIsMobileSidebar } =
     useContext(CustomizerContext);

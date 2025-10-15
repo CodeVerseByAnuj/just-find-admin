@@ -1,11 +1,9 @@
 "use client"
 import React, { useState, useEffect } from "react";
 import type { Metadata } from "next";
-import StudentDashboard from "@/app/components/our-pages/student-dashboard/StudentDashboard";
 import AdminDashboard from "../components/our-pages/admin-dashboard/AdminDashboard";
 import ColumnAdminChart from "../components/our-pages/admin-dashboard/ColumnAdminChart";
 
-import ProfessorDashboard from "@/app/components/our-pages/professor-dashboard/ProfessorDashboard";
 // export const metadata: Metadata = {
 //   title: "Dashboard 3",
 // };
@@ -51,10 +49,6 @@ const page = () => {
           <AdminDashboard />
         </div>
       </div>}
-
-      {/* Professor Dashboard */}
-      {userRole === 2 && <ProfessorDashboard />}
-      {userRole === 3 && <StudentDashboard />}
     </>
   );
 };
