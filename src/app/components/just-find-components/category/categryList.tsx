@@ -15,6 +15,8 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import TitleCard from '../../shared/TitleBorderCard';
 import { toSentenceCase } from '@/utils/tableHeadFormat/headerTitle'
+import AddCategory from './AddCategory';
+import EditCategory from './EditCategory';
 
 function CategryList() {
 
@@ -32,6 +34,7 @@ function CategryList() {
     const {
         data = { categories: [], total: 0 },
         isLoading,
+        refetch,
         error,
     } = useQuery<
         { categories: { id: number; name: string }[]; total: number },
@@ -87,6 +90,10 @@ function CategryList() {
                         onChange={handleSearchChange}
                     />
                 </div>
+                <AddCategory refetch={() => {
+                     refetch();
+                    setPage(1); // Optionally reset to first page
+                }} />
             </section>
 
             <div className='overflow-x-auto border rounded-md border-ld overflow-hidden'>
@@ -111,6 +118,10 @@ function CategryList() {
                                 <TableCell>
                                     <div className='flex justify-center items-center gap-2'>
                                         {/* actions here */}
+                                        <EditCategory
+                                            category={{ id: cat.id.toString(), name: cat.name }}
+                                            refetch={refetch}
+                                        />
                                     </div>
                                 </TableCell>
                             </TableRow>

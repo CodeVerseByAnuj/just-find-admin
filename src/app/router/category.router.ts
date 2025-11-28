@@ -1,8 +1,10 @@
+
 // utils/api/auth.ts
 import api from "@/lib/axios";
 import { CategoryFormSchema, CategorySchema } from "@/lib/schemas/category.schema";
 import { handleApiError } from "@/utils/errors/handleApiError";
 import { handleSuccessMessage } from "@/utils/success/handleSuccessMessage";
+import { z } from "zod";
 
 export interface CategoryQueryParams {
     search?: string;
@@ -23,14 +25,35 @@ export const getCategory = async (params?: CategoryQueryParams) => {
                 sortOrder: params?.sortOrder ?? "DESC",
             },
         });
-        handleSuccessMessage(response, "Categories fetched successfully");
         const categories = CategorySchema.parse(response.data.data);
         return {
             categories,
-            total: response.data.total 
+            total: response.data.total
         };
     } catch (error) {
         handleApiError(error, "Failed to fetch categories");
+        throw error;
+    }
+};
+
+export const createCategory = async (data: z.infer<typeof CategoryFormSchema>) => {
+    try {
+        const response = await api.post("/category", data);
+        handleSuccessMessage(response, "Category created successfully");
+        return response.data;
+    } catch (error) {
+        handleApiError(error, "Failed to create category");
+        throw error;
+    }
+};
+
+export const updateCategory = async (id: string, data: z.infer<typeof CategoryFormSchema>) => {
+    try {
+        const response = await api.patch(`/category/${id}`, data);
+        handleSuccessMessage(response, "Category updated successfully");
+        return response.data;
+    } catch (error) {
+        handleApiError(error, "Failed to update category");
         throw error;
     }
 };
