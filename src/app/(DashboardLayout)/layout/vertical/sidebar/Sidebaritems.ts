@@ -62,6 +62,12 @@ const SidebarContentRole1: MenuItem[] = [
             id: uniqueId(),
             url: "/categories",
           },
+          {
+            name: "business",
+            icon: "solar:chart-bold-duotone",
+            id: uniqueId(),
+            url: "/business",
+          },
         ],
       },
     ],
