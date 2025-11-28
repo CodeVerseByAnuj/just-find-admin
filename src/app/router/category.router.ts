@@ -1,5 +1,3 @@
-
-// utils/api/auth.ts
 import api from "@/lib/axios";
 import { CategoryFormSchema, CategorySchema } from "@/lib/schemas/category.schema";
 import { handleApiError } from "@/utils/errors/handleApiError";
@@ -54,6 +52,17 @@ export const updateCategory = async (id: string, data: z.infer<typeof CategoryFo
         return response.data;
     } catch (error) {
         handleApiError(error, "Failed to update category");
+        throw error;
+    }
+};
+
+export const deleteCategory = async (id: string) => {
+    try {
+        const response = await api.delete(`/category/${id}`);
+        handleSuccessMessage(response, "Category deleted successfully");
+        return response.data;
+    } catch (error) {
+        handleApiError(error, "Failed to delete category");
         throw error;
     }
 };

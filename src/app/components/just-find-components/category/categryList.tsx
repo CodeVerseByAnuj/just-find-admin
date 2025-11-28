@@ -17,6 +17,7 @@ import TitleCard from '../../shared/TitleBorderCard';
 import { toSentenceCase } from '@/utils/tableHeadFormat/headerTitle'
 import AddCategory from './AddCategory';
 import EditCategory from './EditCategory';
+import DeleteCategory from './DeleteCategory';
 
 function CategryList() {
 
@@ -120,6 +121,10 @@ function CategryList() {
                                         {/* actions here */}
                                         <EditCategory
                                             category={{ id: cat.id.toString(), name: cat.name }}
+                                            refetch={refetch}
+                                        />
+                                        <DeleteCategory
+                                            categoryId={cat.id.toString()}
                                             refetch={refetch}
                                         />
                                     </div>
