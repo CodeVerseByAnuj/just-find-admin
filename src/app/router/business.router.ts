@@ -35,3 +35,14 @@ export const getBusiness = async (params?: BusinessQueryParams) => {
         throw error;
     }
 };
+
+export const createBusiness = async (data: any) => {
+    try {
+        const response = await api.post('/business', data);
+        handleSuccessMessage(response, 'Business created successfully');
+        return response.data;
+    } catch (error) {
+        handleApiError(error, 'Failed to create business');
+        throw error;
+    }
+};
