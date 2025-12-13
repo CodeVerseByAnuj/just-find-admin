@@ -16,18 +16,25 @@ import {
 } from "flowbite-react"
 import { createBusiness } from "@/app/router/business.router"
 import useCategory from "@/hooks/useCategory"
+import { State, City } from "country-state-city";
 
 
 type BusinessFormData = z.infer<typeof BusinessFormSchema>
 
 function AddBusiness() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedState, setSelectedState] = useState("")
+  const [availableCities, setAvailableCities] = useState<any[]>([])
   const { categories } = useCategory()
-  
+
+  const states = State.getStatesOfCountry("IN");
+
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<BusinessFormData>({
     resolver: zodResolver(BusinessFormSchema),
@@ -58,6 +65,25 @@ function AddBusiness() {
     },
   })
 
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const stateValue = e.target.value
+    setSelectedState(stateValue)
+    
+    // Find the state code for the selected state
+    const selectedStateObj = states.find(state => state.name === stateValue)
+    
+    if (selectedStateObj) {
+      // Get cities for the selected state
+      const cities = City.getCitiesOfState("IN", selectedStateObj.isoCode)
+      setAvailableCities(cities)
+    } else {
+      setAvailableCities([])
+    }
+    
+    // Clear the city selection when state changes
+    setValue("city", "")
+  }
+
   const onSubmit = async (data: BusinessFormData) => {
     if (isSubmitting) return
     setIsSubmitting(true)
@@ -75,6 +101,8 @@ function AddBusiness() {
     try {
       await createBusiness(payload as any)
       reset()
+      setSelectedState("")
+      setAvailableCities([])
       // Optionally navigate or show a success UI here
     } catch (error) {
       console.error("Failed to create business", error)
@@ -103,6 +131,7 @@ function AddBusiness() {
           <div>
             <Label htmlFor="category_id" className="mb-2 block">Category ID</Label>
             <Select id="category_id" {...register("category_id")}>
+              <option value="">Select Category</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
@@ -123,12 +152,30 @@ function AddBusiness() {
 
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <Label htmlFor="city" className="mb-2 block">City</Label>
-            <TextInput id="city" {...register("city")} />
+            <Label htmlFor="state" className="mb-2 block">State</Label>
+            <Select 
+              id="state" 
+              {...register("state")} 
+              onChange={handleStateChange}
+            >
+              <option value="">Select State</option>
+              {states.map((state) => (
+                <option key={state.isoCode} value={state.name}>
+                  {state.name}
+                </option>
+              ))}
+            </Select>
           </div>
           <div>
-            <Label htmlFor="state" className="mb-2 block">State</Label>
-            <TextInput id="state" {...register("state")} />
+            <Label htmlFor="city" className="mb-2 block">City</Label>
+            <Select id="city" {...register("city")} disabled={!selectedState}>
+              <option value="">Select City</option>
+              {availableCities.map((city) => (
+                <option key={city.name} value={city.name}>
+                  {city.name}
+                </option>
+              ))}
+            </Select>
           </div>
           <div>
             <Label htmlFor="pincode" className="mb-2 block">Pincode</Label>
@@ -136,6 +183,7 @@ function AddBusiness() {
           </div>
         </div>
 
+        {/* ...existing code... */}
         <div className="grid grid-cols-3 gap-4">
           <div>
             <Label htmlFor="phone" className="mb-2 block">Phone</Label>
