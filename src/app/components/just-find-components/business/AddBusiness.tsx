@@ -5,46 +5,25 @@ import TitleCard from "../../shared/TitleBorderCard"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { BusinessFormSchema } from "@/lib/schemas/business.schema"
 import {
   Button,
   Label,
   TextInput,
   Textarea,
   Checkbox,
+  Select
 } from "flowbite-react"
 import { createBusiness } from "@/app/router/business.router"
+import useCategory from "@/hooks/useCategory"
 
-const BusinessFormSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  description: z.string().optional(),
-  category_id: z.preprocess((val) => Number(val), z.number().optional()),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  pincode: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().email().optional(),
-  website: z.string().url().optional(),
-  rating: z.preprocess((v) => (v === "" ? undefined : Number(v)), z.number().optional()),
-  verified: z.boolean().optional().default(false),
-  images: z.string().optional(), // we'll parse to array from newline/comma-separated
-  open_time: z.string().optional(),
-  close_time: z.string().optional(),
-  tags: z.string().optional(), // comma separated
-  views_count: z.preprocess((v) => Number(v), z.number().optional()),
-  is_premium: z.boolean().optional().default(false),
-  sponsored: z.boolean().optional().default(false),
-  seo_title: z.string().optional(),
-  seo_description: z.string().optional(),
-  slug: z.string().optional(),
-  ogImage: z.string().optional(),
-})
 
 type BusinessFormData = z.infer<typeof BusinessFormSchema>
 
 function AddBusiness() {
   const [isSubmitting, setIsSubmitting] = useState(false)
-
+  const { categories } = useCategory()
+  
   const {
     register,
     handleSubmit,
@@ -83,24 +62,18 @@ function AddBusiness() {
     if (isSubmitting) return
     setIsSubmitting(true)
 
-    // Transform images and tags into arrays as expected by API
-    const payload: any = { ...data }
-    if (data.images && typeof data.images === "string") {
-      const arr = data.images
-        .split(/[,\n]/)
-        .map((s) => s.trim())
-        .filter(Boolean)
-      payload.images = arr
-    }
-    if (data.tags && typeof data.tags === "string") {
-      payload.tags = data.tags
-        .split(/[,\n]/)
-        .map((s) => s.trim())
-        .filter(Boolean)
-    }
+    const imagesArray = data.images
+      ? data.images.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)
+      : []
+
+    const tagsArray = data.tags
+      ? data.tags.split(',').map((s) => s.trim()).filter(Boolean)
+      : []
+
+    const payload = { ...data, images: imagesArray, tags: tagsArray }
 
     try {
-      await createBusiness(payload)
+      await createBusiness(payload as any)
       reset()
       // Optionally navigate or show a success UI here
     } catch (error) {
@@ -129,7 +102,13 @@ function AddBusiness() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="category_id" className="mb-2 block">Category ID</Label>
-            <TextInput id="category_id" {...register("category_id")} />
+            <Select id="category_id" {...register("category_id")}>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </Select>
           </div>
           <div>
             <Label htmlFor="rating" className="mb-2 block">Rating</Label>

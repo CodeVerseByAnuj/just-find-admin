@@ -15,6 +15,7 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import TitleCard from '../../shared/TitleBorderCard';
 import { toSentenceCase } from '@/utils/tableHeadFormat/headerTitle'
+import Link from 'next/link';
 
 function BusinessList() {
 
@@ -83,6 +84,9 @@ function BusinessList() {
                     />
                 </div>
             </section>
+            <Link href="/business/add-business" className="mb-4 inline-block text-blue-600 hover:underline">
+                Add New Business
+            </Link>
 
             <div className='overflow-x-auto border rounded-md border-ld overflow-hidden'>
                 <Table hoverable className='min-w-[900px]'>
