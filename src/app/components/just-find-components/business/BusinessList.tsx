@@ -1,6 +1,7 @@
 "use client"
 import React, { useCallback } from 'react';
 import { getBusiness, BusinessQueryParams } from '@/app/router/business.router';
+import DeleteBusiness from './DeleteBusiness';
 import { debounce } from "lodash";
 import {
     Table,
@@ -11,6 +12,7 @@ import {
     TableRow,
     Pagination,
     TextInput,
+    Button
 } from 'flowbite-react'
 import { useQuery } from '@tanstack/react-query'
 import TitleCard from '../../shared/TitleBorderCard';
@@ -35,7 +37,7 @@ function BusinessList() {
         total?: number;
     };
 
-    const { data, isLoading, error } = useQuery<QueryResult>({
+    const { data, isLoading, error , refetch } = useQuery<QueryResult>({
         queryKey: ["businesses", { search, page, limit, sortBy, sortOrder }],
         queryFn: async () => await getBusiness({ search, page, limit, sortBy, sortOrder }),
     });
@@ -75,6 +77,13 @@ function BusinessList() {
 
     return (
         <TitleCard title="Business List">
+            <div className="absolute top-3 right-6">
+                <Button>
+                    <Link href="/business/add-business">
+                        Add New Business
+                    </Link>
+                </Button>
+            </div>
             <section className='flex w-full justify-between mb-4 max-xsm:flex-col'>
                 <div className='mb-4 w-[200px] sm:w-sm max-xsm:w-full'>
                     <TextInput
@@ -84,9 +93,8 @@ function BusinessList() {
                     />
                 </div>
             </section>
-            <Link href="/business/add-business" className="mb-4 inline-block text-blue-600 hover:underline">
-                Add New Business
-            </Link>
+
+
 
             <div className='overflow-x-auto border rounded-md border-ld overflow-hidden'>
                 <Table hoverable className='min-w-[900px]'>
@@ -103,6 +111,7 @@ function BusinessList() {
                             <TableHeadCell className='text-center'><span>Sponsored</span></TableHeadCell>
                             <TableHeadCell className='text-center'><span>Packages</span></TableHeadCell>
                             <TableHeadCell><span>Category</span></TableHeadCell>
+                            <TableHeadCell>Action</TableHeadCell>
                         </TableRow>
                     </TableHead>
 
@@ -121,6 +130,17 @@ function BusinessList() {
                                     <TableCell className='text-center'>{biz.sponsored ? 'Yes' : 'No'}</TableCell>
                                     <TableCell className='text-center'>{biz.packagesCount ?? 0}</TableCell>
                                     <TableCell>{biz.category?.name ?? '-'}</TableCell>
+                                    <TableCell>
+                                       <div className='flex items-center gap-2'>
+                                         <Link
+                                            href={`/business/add-business?id=${biz.id}`}
+                                            className='text-blue-600 hover:underline'
+                                        >
+                                            Edit
+                                        </Link>
+                                        <DeleteBusiness id={biz.id} name={biz.name} refetch={refetch} />
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
                             ))
                         ) : (

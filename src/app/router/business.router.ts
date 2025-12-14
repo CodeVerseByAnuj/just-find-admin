@@ -69,3 +69,14 @@ export const updateBusiness = async (id: number, data: any) => {
         throw error;
     }
 };
+
+export const deleteBusiness = async (id: number) => {
+    try {
+        const response = await api.delete(`/business/${id}`);
+        handleSuccessMessage(response, 'Business deleted successfully');
+        return response.data;
+    } catch (error) {
+        handleApiError(error, `Failed to delete business with ID: ${id}`);
+        throw error;
+    }
+};
