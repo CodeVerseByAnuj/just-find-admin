@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import TitleCard from "../../shared/TitleBorderCard"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { BusinessFormSchema } from "@/lib/schemas/business.schema"
+import { BusinessFormSchema, BusinessSchema } from "@/lib/schemas/business.schema"
+import { useQuery } from "@tanstack/react-query"
 import {
   Button,
   Label,
@@ -14,18 +15,29 @@ import {
   Checkbox,
   Select
 } from "flowbite-react"
-import { createBusiness } from "@/app/router/business.router"
+import { createBusiness, getBusinessById , updateBusiness } from "@/app/router/business.router"
 import useCategory from "@/hooks/useCategory"
 import { State, City } from "country-state-city";
-
+import { useSearchParams } from "next/navigation"
 
 type BusinessFormData = z.infer<typeof BusinessFormSchema>
+type BusinessDataType = z.infer<typeof BusinessSchema>
 
 function AddBusiness() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedState, setSelectedState] = useState("")
   const [availableCities, setAvailableCities] = useState<any[]>([])
   const { categories } = useCategory()
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+  const businessId = id ? parseInt(id, 10) : null;
+  const isEditMode = businessId !== null;
+
+  const { data: businessData, isLoading } = useQuery<BusinessDataType>({
+    queryKey: ['business', businessId],
+    queryFn: () => getBusinessById(businessId!),
+    enabled: isEditMode,
+  });
 
   const states = State.getStatesOfCountry("IN");
 
@@ -55,7 +67,6 @@ function AddBusiness() {
       open_time: "",
       close_time: "",
       tags: "",
-      views_count: 0,
       is_premium: false,
       sponsored: false,
       seo_title: "",
@@ -65,13 +76,53 @@ function AddBusiness() {
     },
   })
 
+  // Populate form when editing
+  useEffect(() => {
+    if (businessData && isEditMode) {
+      // Convert arrays back to strings for form fields
+      const imagesString = Array.isArray(businessData.images)
+        ? businessData.images.join('\n')
+        : businessData.images || '';
+
+      const tagsString = Array.isArray(businessData.tags)
+        ? businessData.tags.join(', ')
+        : businessData.tags || '';
+
+      // Set all form values
+      Object.keys(businessData).forEach((key) => {
+        if (key === 'images') {
+          setValue('images', imagesString);
+        } else if (key === 'tags') {
+          setValue('tags', tagsString);
+        } else if (key in BusinessFormSchema.shape) {
+          const value = businessData[key as keyof BusinessFormData];
+          if (Array.isArray(value)) {
+            setValue(key as keyof BusinessFormData, value.join(', '));
+          } else {
+            setValue(key as keyof BusinessFormData, value as string | number | boolean | undefined);
+          }
+        }
+      });
+
+      // Set state and populate cities if state exists
+      if (businessData.state) {
+        setSelectedState(businessData.state);
+        const selectedStateObj = states.find(state => state.name === businessData.state);
+        if (selectedStateObj) {
+          const cities = City.getCitiesOfState("IN", selectedStateObj.isoCode);
+          setAvailableCities(cities);
+        }
+      }
+    }
+  }, [businessData]);
+
   const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const stateValue = e.target.value
     setSelectedState(stateValue)
-    
+
     // Find the state code for the selected state
     const selectedStateObj = states.find(state => state.name === stateValue)
-    
+
     if (selectedStateObj) {
       // Get cities for the selected state
       const cities = City.getCitiesOfState("IN", selectedStateObj.isoCode)
@@ -79,7 +130,7 @@ function AddBusiness() {
     } else {
       setAvailableCities([])
     }
-    
+
     // Clear the city selection when state changes
     setValue("city", "")
   }
@@ -99,20 +150,35 @@ function AddBusiness() {
     const payload = { ...data, images: imagesArray, tags: tagsArray }
 
     try {
-      await createBusiness(payload as any)
-      reset()
-      setSelectedState("")
-      setAvailableCities([])
+      if (isEditMode) {
+        await updateBusiness(businessId as number, payload as any)
+      } else {
+        await createBusiness(payload as any)
+      }
+
+      if (!isEditMode) {
+        reset()
+        setSelectedState("")
+        setAvailableCities([])
+      }
       // Optionally navigate or show a success UI here
     } catch (error) {
-      console.error("Failed to create business", error)
+      console.error(`Failed to ${isEditMode ? 'update' : 'create'} business`, error)
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  if (isEditMode && isLoading) {
+    return (
+      <TitleCard title="Loading...">
+        <div>Loading business data...</div>
+      </TitleCard>
+    );
+  }
+
   return (
-    <TitleCard title="Add Business">
+    <TitleCard title={isEditMode ? "Edit Business" : "Add Business"}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <Label htmlFor="name" className="mb-2 block">Name *</Label>
@@ -153,10 +219,11 @@ function AddBusiness() {
         <div className="grid grid-cols-3 gap-4">
           <div>
             <Label htmlFor="state" className="mb-2 block">State</Label>
-            <Select 
-              id="state" 
-              {...register("state")} 
+            <Select
+              id="state"
+              {...register("state")}
               onChange={handleStateChange}
+              value={selectedState}
             >
               <option value="">Select State</option>
               {states.map((state) => (
@@ -183,7 +250,6 @@ function AddBusiness() {
           </div>
         </div>
 
-        {/* ...existing code... */}
         <div className="grid grid-cols-3 gap-4">
           <div>
             <Label htmlFor="phone" className="mb-2 block">Phone</Label>
@@ -258,7 +324,7 @@ function AddBusiness() {
 
         <div className="pt-4">
           <Button type="submit" color="primary" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save Business"}
+            {isSubmitting ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update Business" : "Save Business")}
           </Button>
         </div>
       </form>

@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import { BusinessResponseSchema, BusinessListSchema } from "@/lib/schemas/business.schema";
+import { BusinessResponseSchema, BusinessListSchema ,BusinessSchema } from "@/lib/schemas/business.schema";
 import { handleApiError } from "@/utils/errors/handleApiError";
 import { handleSuccessMessage } from "@/utils/success/handleSuccessMessage";
 import { z } from "zod";
@@ -36,6 +36,18 @@ export const getBusiness = async (params?: BusinessQueryParams) => {
     }
 };
 
+export const getBusinessById = async (id: number) => {
+    try {
+        const response = await api.get(`/business/${id}`);
+        const parsed = (response.data.data);
+        return parsed;
+    } catch (error) {
+        handleApiError(error, `Failed to fetch business with ID: ${id}`);
+        console.error(error);
+        throw error;
+    }
+};
+
 export const createBusiness = async (data: any) => {
     try {
         const response = await api.post('/business', data);
@@ -43,6 +55,17 @@ export const createBusiness = async (data: any) => {
         return response.data;
     } catch (error) {
         handleApiError(error, 'Failed to create business');
+        throw error;
+    }
+};
+
+export const updateBusiness = async (id: number, data: any) => {
+    try {
+        const response = await api.patch(`/business/${id}`, data);
+        handleSuccessMessage(response, 'Business updated successfully');
+        return response.data;
+    } catch (error) {
+        handleApiError(error, `Failed to update business with ID: ${id}`);
         throw error;
     }
 };
